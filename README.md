@@ -8,10 +8,10 @@
   <a href='https://github.com/DmytroVasin/DrawPen/releases/latest/download/DrawPen.Setup.exe'>
     <img alt='Get it on Windows' width="134px" src='https://github.com/DmytroVasin/DrawPen/blob/main/assets/static/BadgeWindows.png?raw=true'/>
   </a>
-  <a href='https://github.com/DmytroVasin/DrawPen/releases/latest/download/DrawPen-0.0.40-arm64.dmg'>
+  <a href='https://github.com/DmytroVasin/DrawPen/releases/latest/download/DrawPen-0.0.39-arm64.dmg'>
     <img alt='Get it on macOS' width="134px" src='https://github.com/DmytroVasin/DrawPen/blob/main/assets/static/BadgeMacOS.png?raw=true'/>
   </a>
-  <a href='https://github.com/DmytroVasin/DrawPen/releases/latest/download/drawpen_0.0.40_amd64.deb'>
+  <a href='https://github.com/DmytroVasin/DrawPen/releases/latest/download/drawpen_0.0.39_amd64.deb'>
     <img alt='Get it on Linux' width="134px" src='https://github.com/DmytroVasin/DrawPen/blob/main/assets/static/BadgeLinux.png?raw=true'/>
   </a>
 </p>
@@ -21,6 +21,14 @@
 ![DrawPen](https://github.com/DmytroVasin/DrawPen/blob/main/assets/static/main.png?raw=true)
 
 ![DrawPen - Usage](https://github.com/DmytroVasin/DrawPen/blob/main/assets/static/main.gif?raw=true)
+
+### About this Fork: AI Integration
+
+This fork introduces powerful AI capabilities to DrawPen, powered by Google's Gemini models.
+With the new **AI Chatbox**, you can generate drawings and text directly on your canvas using natural language prompts.
+
+**New Feature:**
+*   **AI Chatbox**: Press <kbd>CMD/CTRL + I</kbd> to open the AI dialog. Describe what you want to draw or write, and the AI will generate it for you.
 
 ### Installation
 
@@ -55,6 +63,7 @@ scoop install extras/drawpen
 | Clear Desk                              | <kbd>CMD/CTRL + K</kbd> | |
 | Settings Page                           | <kbd>CMD/CTRL + ,</kbd> | |
 | Reset to original                       | | Resets all app settings <br /> (keys, colors, toolbar position, etc.)  |
+| AI Chatbox                              | <kbd>CMD/CTRL + I</kbd> | Open the AI prompt dialog to generate drawings/text |
 
 ### Contributing
 
@@ -64,3 +73,7 @@ Please read our [Contributing Guidelines](CONTRIBUTING.md) for more information.
 
 DrawPen is licensed under the MIT Open Source license.
 For more information, see [LICENSE](LICENSE).
+
+### Acknowledgements
+
+Huge thanks to [Dmytro Vasin](https://github.com/DmytroVasin) for creating the original [DrawPen](https://github.com/DmytroVasin/DrawPen) and making it open source. This project wouldn't be possible without his excellent work.

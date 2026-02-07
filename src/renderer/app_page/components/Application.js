@@ -8,6 +8,7 @@ import CuteCursor from './components/CuteCursor.js';
 import RippleEffect from './components/RippleEffect.js';
 import Toast from './components/Toast.js';
 import TextEditor from './components/TextEditor.js';
+import AIDialog from './AIDialog.js';
 import {
   filterClosePoints,
   getMouseCoordinates,
@@ -26,6 +27,7 @@ import {
   moveToCoordinates,
   calculateAspectRatio,
 } from './utils/figureDetection.js';
+import { parseLocalPrompt } from '../utils/localHeuristics.js';
 import { FaPaintBrush, FaHighlighter, FaRegSquare, FaRegCircle, FaArrowRight, FaEraser } from "react-icons/fa";
 import { AiOutlineLine } from "react-icons/ai";
 import { GiLaserburn } from "react-icons/gi";
@@ -60,8 +62,6 @@ const Icons = {
 };
 
 const Application = (settings) => {
-  // console.log('App render');
-
   const initialColorDeg = Math.random() * 360
   const initialActiveTool = settings.tool_bar_active_tool
   const initialActiveColor = settings.tool_bar_active_color_index
@@ -127,6 +127,7 @@ const Application = (settings) => {
   const [secondaryColorIndex, setSecondaryColorIndex] = useState(initialSecondaryColorIndex);
   const [toastInfo, setToastInfo] = useState(null);
   const [fadeOpacity, setFadeOpacity] = useState(1.0);
+  const [showAIDialog, setShowAIDialog] = useState(false);
 
   useEffect(() => {
     window.electronAPI.onResetScreen(handleReset);
@@ -164,7 +165,6 @@ const Application = (settings) => {
       return
     }
 
-    // Dynamic keyboard shortcuts
     if (eventMatches(event, key_show_hide_toolbar)) {
       event.preventDefault();
       handleToggleToolbar();
@@ -191,7 +191,6 @@ const Application = (settings) => {
       return
     }
 
-    // Static keyboard shortcuts
     switch (eventKey) {
       case 'v': {
         if (ctrlOrMeta) {
@@ -355,6 +354,13 @@ const Application = (settings) => {
       }
       case 'e': {
         handleChangeTool('eraser');
+        break;
+      }
+      case 'i': {
+        if (ctrlOrMeta) {
+          event.preventDefault();
+          setShowAIDialog(prev => !prev);
+        }
         break;
       }
       case 'x': {
@@ -791,6 +797,51 @@ const Application = (settings) => {
     setAllFigures(eraseOnIntersection(eraserFigure));
     setFadeFigures(eraseOnIntersection(eraserFigure));
   }
+  
+  const handleAIGenerate = async (prompt) => {
+    // 1. Try Local Heuristics (Instant)
+    const { width, height } = document.getElementById('root_wrapper').getBoundingClientRect();
+    const localFigures = parseLocalPrompt(prompt, width, height);
+
+    if (localFigures) {
+       setAllFigures(prev => [...prev, ...localFigures]);
+       setUndoStackFigures(prevUndoStack => [...prevUndoStack, { type: 'add', figures: localFigures }]);
+       setRedoStackFigures([]);
+       setToastInfo({ id: Date.now(), type: 'success', text: `Instant Draw: ${localFigures.length} figures` });
+       return;
+    }
+
+    // 2. Fallback to AI
+    let newFigures = await window.electronAPI.invokeGenerateAIDrawing(prompt);
+    
+    // Default to Blue (1) if Black (6) is returned and user didn't ask for Black
+    if (!prompt.toLowerCase().includes('black')) {
+      newFigures = newFigures.map(f => ({
+        ...f,
+        colorIndex: f.colorIndex === 6 ? 1 : f.colorIndex
+      }));
+    }
+    
+    if (newFigures && newFigures.length > 0) {
+      setAllFigures(prev => [...prev, ...newFigures]);
+      
+      // Add to undo stack
+      setUndoStackFigures(prevUndoStack => [...prevUndoStack, { type: 'add', figures: newFigures }]);
+      setRedoStackFigures([]);
+      
+      setToastInfo({
+        id: Date.now(),
+        type: 'success',
+        text: `Generated ${newFigures.length} figures`
+      });
+    } else {
+       setToastInfo({
+        id: Date.now(),
+        type: 'error',
+        text: 'AI could not generate drawing'
+      });
+    }
+  };
 
   const handleMouseDown = ({ x, y }) => {
     // Diactivate text editor
@@ -1275,6 +1326,14 @@ const Application = (settings) => {
             handleToastClicked={handleToastClicked}
           />
       }
+      
+      
+      <AIDialog
+        isOpen={showAIDialog}
+        onClose={() => setShowAIDialog(false)}
+        onSubmit={handleAIGenerate}
+      />
+
 
       {
         showWhiteboard &&

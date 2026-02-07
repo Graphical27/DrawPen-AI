@@ -49,10 +49,12 @@
     "webpack": "^5.94.0"
   },
   "dependencies": {
+    "@google/genai": "^1.40.0",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^10.0.0",
     "lazy-brush": "^2.0.1",
     "lodash.throttle": "^4.1.1",
+    "mime": "^4.1.0",
     "perfect-freehand": "^1.2.2",
     "posthog-node": "^5.21.2",
     "react": "^18.3.1",

@@ -1,3 +1,4 @@
+import { GoogleGenAI } from '@google/genai';
 import { app, Tray, Menu, BrowserWindow, screen, globalShortcut, shell, ipcMain, nativeTheme, systemPreferences, desktopCapturer } from 'electron';
 import { updateElectronApp } from 'update-electron-app';
 import Store from 'electron-store';
@@ -11,6 +12,11 @@ import electronSquirrelStartup from 'electron-squirrel-startup';
 if (electronSquirrelStartup) {
   app.quit();
 }
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
+
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const isMac = process.platform === 'darwin'
@@ -135,7 +141,6 @@ const schema = {
   },
 };
 
-// rawLog('[STORE PATH]:', app.getPath('userData') + '/config.json');
 const store = new Store({
   schema
 });
@@ -192,7 +197,7 @@ function updateContextMenu() {
     if (!accel) return undefined;
     if (accel === KEY_NULL) return undefined;
 
-    if (isLinux) return undefined; // Disable tray menu accelerators on Linux
+    if (isLinux) return undefined; 
 
     return accel
   };
@@ -297,13 +302,13 @@ function createMainWindow() {
     width: width,
     height: height,
     transparent: true,
-    backgroundColor: '#00000000', // 8-symbol ARGB
+    backgroundColor: '#00000000',
     resizable: isResizable,
     hasShadow: false,
     frame: false,
     alwaysOnTop: true,
     skipTaskbar: true,
-    opacity: 0.9999999, // Fix transparency rendering artifacts
+    opacity: 0.9999999, 
     autoHideMenuBar: true,
     webPreferences: {
       devTools: hasDevTools,
@@ -463,10 +468,9 @@ function createSettingsWindow() {
   });
 }
 
-// Must be before "app.whenReady()"
 if (!app.requestSingleInstanceLock()) {
   app.quit();
-  process.exit(0); // return is forbidden in this context
+  process.exit(0); 
 }
 
 app.on('second-instance', () => {
@@ -501,7 +505,6 @@ app.on('will-quit', () => {
 app.on('window-all-closed', () => {
   rawLog('All windows closed.')
 
-  // Empty handler to prevent app from quitting
 })
 
 function preCheck() {
@@ -556,7 +559,7 @@ ipcMain.handle('get_settings', () => {
 });
 
 ipcMain.handle('set_settings', (_event, newSettings) => {
-  const needUpdateMenu = shouldUpdateMenu(newSettings) // Roundtrip request updates store value
+  const needUpdateMenu = shouldUpdateMenu(newSettings)
 
   store.set({ ...store.store, ...newSettings })
 
@@ -799,6 +802,130 @@ ipcMain.handle('set_app_icon_color', (_event, value) => {
   return null;
 });
 
+ipcMain.handle('generate_ai_drawing', async (_event, prompt) => {
+  try {
+    rawLog('Generating drawing for prompt:', prompt);
+
+    let width = 1920;
+    let height = 1080;
+
+    if (mainWindow) {
+        const bounds = mainWindow.getContentBounds();
+        width = bounds.width;
+        height = bounds.height;
+    }
+
+    const modelId = "gemini-3-flash-preview";
+    const systemInstruction = `
+    You are an expert drawing assistant for a whiteboard app.
+    Your goal is to output JSON instructions to draw figures on the canvas based on the user's prompt.
+    The canvas size is ${width}x${height}. Please ensure all coordinates are strictly within this range.
+    
+    The available figures and their schema are:
+    
+    1. **Line** (drawLine):
+       - \`type\`: 'line'
+       - \`points\`: [[x1, y1], [x2, y2]]
+       - \`colorIndex\`: 
+            0: Rainbow (multi-color)
+            1: Blue
+            2: Red
+            3: Green
+            4: Orange
+            5: White
+            6: Black (Default)
+       - \`widthIndex\`: 1 (medium), 2 (thick)
+       
+    2. **Rectangle** (drawRectangle):
+       - \`type\`: 'rectangle'
+       - \`points\`: [[x1, y1], [x2, y2]] (top-left, bottom-right)
+       - \`colorIndex\`: integer (see above)
+       - \`widthIndex\`: integer
+       
+    3. **Oval/Circle** (drawOval):
+       - \`type\`: 'oval'
+       - \`points\`: [[x1, y1], [x2, y2]] (bounding box)
+       - \`colorIndex\`: integer (see above)
+       - \`widthIndex\`: integer
+       
+    4. **Text** (drawText):
+       - \`type\`: 'text'
+       - \`points\`: [[x, y]] (top-left position)
+       - \`text\`: "The text content"
+       - \`colorIndex\`: integer (see above, default 1 for blue)
+       - \`widthIndex\`: integer (affects font size)
+       - \`width\`: approx width in px (e.g. 200)
+       - \`height\`: approx height in px (e.g. 50)
+       - \`scale\`: 1
+
+    5. **Arrow** (drawArrow):
+       - \`type\`: 'arrow'
+       - \`points\`: [[x1, y1], [x2, y2]] (tail to head)
+       - \`colorIndex\`: integer (see above)
+       - \`widthIndex\`: integer
+
+    IMPORTANT:
+    - Respond ONLY with valid JSON.
+    - The JSON should be an array of figure objects.
+    - Example prompt: "Draw a red line" -> [{"type":"line", "points":[[10,10],[100,100]], "colorIndex":2, "widthIndex":2, "id": 1234567890}]
+    - Ensure IDs are unique (use timestamp-like integers).
+    - For math questions like "8 + 2 = ?", write the result e.g. "8 + 2 = 10" using the 'text' tool.
+    - KEEP COORDINATES VISIBLE: x between 0 and ${width}, y between 0 and ${height}.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: modelId,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: 'application/json',
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }],
+        },
+      ],
+    });
+
+
+
+    rawLog('Gemini response keys:', Object.keys(response));
+
+    let text;
+    if (typeof response.text === 'function') {
+      text = response.text();
+    } else if (response.response && typeof response.response.text === 'function') {
+      text = response.response.text();
+    } else {
+       const candidate = response.candidates?.[0];
+       if (candidate?.content?.parts?.[0]?.text) {
+          text = candidate.content.parts[0].text;
+       } else {
+          throw new Error('Unexpected response structure: ' + JSON.stringify(Object.keys(response)));
+       }
+    }
+
+    rawLog('Gemini response:', text);
+    
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const figures = JSON.parse(cleanText);
+    
+    const figuresWithIds = figures.map((f, i) => ({
+      ...f,
+      id: Date.now() + i,
+      rainbowColorDeg: Math.random() * 360,
+    }));
+
+    rawLog('Returning figures:', JSON.stringify(figuresWithIds));
+
+    return figuresWithIds;
+  } catch (error) {
+    console.error('Error generating AI drawing:', error);
+    return [];
+  }
+});
+
+
 ipcMain.handle('set_drawing_monitor', (_event, value) => {
   rawLog('Setting drawing monitor:', value)
 
@@ -882,7 +1009,6 @@ function toggleToolbar() {
 
     if (mainWindow) {
       mainWindow.webContents.send('toggle_toolbar')
-      // Roundtrip request updates store value
     } else {
       store.set('show_tool_bar', !store.get('show_tool_bar'));
       updateContextMenu()
@@ -896,7 +1022,6 @@ function toggleWhiteboard() {
 
     if (mainWindow) {
       mainWindow.webContents.send('toggle_whiteboard')
-      // Roundtrip request updates store value
     } else {
       store.set('show_whiteboard', !store.get('show_whiteboard'));
       updateContextMenu()
@@ -955,7 +1080,7 @@ function quitApp() {
 function screenshotTimecode4(date) {
   let value = date.getHours() * 3600 +
               date.getMinutes() * 60 +
-              date.getSeconds(); // 0..86399
+              date.getSeconds();
 
   let code = '';
   for (let i = 0; i < 4; i++) {
@@ -992,7 +1117,6 @@ async function makeScreenshot() {
     if (isMac) {
       const status = systemPreferences.getMediaAccessStatus('screen');
       if (status !== 'granted') {
-        // NOTE: Adds an app to Screen & System Audio Recording list
         try {
           await desktopCapturer.getSources({
             types: ['screen'],

@@ -17,4 +17,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onToggleWhiteboard: (callback) => ipcRenderer.on('toggle_whiteboard', callback),
   onRefreshSettings: (callback) => ipcRenderer.on('refresh_settings', callback),
   onShowNotification: (callback) => ipcRenderer.on('show_notification', callback),
+
+  invokeGenerateAIDrawing: (prompt) => ipcRenderer.invoke('generate_ai_drawing', prompt),
 });

@@ -7,4 +7,8 @@ module.exports = {
       'process.env.PUBLIC_POSTHOG_KEY': JSON.stringify(process.env.PUBLIC_POSTHOG_KEY),
     }),
   ],
+  externals: {
+    'bufferutil': 'bufferutil',
+    'utf-8-validate': 'utf-8-validate',
+  },
 };
