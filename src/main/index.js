@@ -802,9 +802,30 @@ ipcMain.handle('set_app_icon_color', (_event, value) => {
   return null;
 });
 
+const aiCacheStore = new Store({
+  name: 'ai-cache',
+  clearInvalidConfig: true
+});
+
 ipcMain.handle('generate_ai_drawing', async (_event, prompt) => {
   try {
     rawLog('Generating drawing for prompt:', prompt);
+
+    // 1. Check Cache
+    if (aiCacheStore.has(prompt)) {
+      rawLog('AI Cache hit for prompt:', prompt);
+      const cachedFigures = aiCacheStore.get(prompt);
+      
+      // Apply new IDs/Colors to cached figures so they feel "fresh"
+      const figuresWithIds = cachedFigures.map((f, i) => ({
+          ...f,
+          id: Date.now() + i,
+          rainbowColorDeg: Math.random() * 360,
+      }));
+      return figuresWithIds;
+    }
+
+    rawLog('AI Cache miss. Calling Gemini...');
 
     let width = 1920;
     let height = 1080;
@@ -910,6 +931,9 @@ ipcMain.handle('generate_ai_drawing', async (_event, prompt) => {
     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
     const figures = JSON.parse(cleanText);
     
+    // 2. Save to Cache (store raw figures without IDs/Layouts that might change)
+    aiCacheStore.set(prompt, figures);
+
     const figuresWithIds = figures.map((f, i) => ({
       ...f,
       id: Date.now() + i,

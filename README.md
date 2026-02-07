@@ -1,3 +1,11 @@
+### About this Fork: AI Integration
+
+This fork introduces powerful AI capabilities to DrawPen, powered by Google's Gemini models.
+With the new **AI Chatbox**, you can generate drawings and text directly on your canvas using natural language prompts.
+
+**New Feature:**
+*   **AI Chatbox**: Press <kbd>CMD/CTRL + I</kbd> to open the AI dialog. Describe what you want to draw or write, and the AI will generate it for you.
+
 <p align="center">
   <img src="https://github.com/DmytroVasin/DrawPen/blob/main/assets/static/icon.png?raw=true" height="200">
   <h3 align="center">Draw Pen</h3>
@@ -22,13 +30,6 @@
 
 ![DrawPen - Usage](https://github.com/DmytroVasin/DrawPen/blob/main/assets/static/main.gif?raw=true)
 
-### About this Fork: AI Integration
-
-This fork introduces powerful AI capabilities to DrawPen, powered by Google's Gemini models.
-With the new **AI Chatbox**, you can generate drawings and text directly on your canvas using natural language prompts.
-
-**New Feature:**
-*   **AI Chatbox**: Press <kbd>CMD/CTRL + I</kbd> to open the AI dialog. Describe what you want to draw or write, and the AI will generate it for you.
 
 ### Installation
 
