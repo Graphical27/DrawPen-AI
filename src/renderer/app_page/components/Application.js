@@ -812,34 +812,55 @@ const Application = (settings) => {
     }
 
     // 2. Fallback to AI
-    let newFigures = await window.electronAPI.invokeGenerateAIDrawing(prompt);
-    
-    // Default to Blue (1) if Black (6) is returned and user didn't ask for Black
-    if (!prompt.toLowerCase().includes('black')) {
-      newFigures = newFigures.map(f => ({
-        ...f,
-        colorIndex: f.colorIndex === 6 ? 1 : f.colorIndex
-      }));
-    }
-    
-    if (newFigures && newFigures.length > 0) {
-      setAllFigures(prev => [...prev, ...newFigures]);
+    try {
+      let newFigures = await window.electronAPI.invokeGenerateAIDrawing(prompt);
       
-      // Add to undo stack
-      setUndoStackFigures(prevUndoStack => [...prevUndoStack, { type: 'add', figures: newFigures }]);
-      setRedoStackFigures([]);
+      // Default to Blue (1) if Black (6) is returned and user didn't ask for Black
+      if (!prompt.toLowerCase().includes('black')) {
+        newFigures = newFigures.map(f => ({
+          ...f,
+          colorIndex: f.colorIndex === 6 ? 1 : f.colorIndex
+        }));
+      }
+      
+      if (newFigures && newFigures.length > 0) {
+        setAllFigures(prev => [...prev, ...newFigures]);
+        
+        // Add to undo stack
+        setUndoStackFigures(prevUndoStack => [...prevUndoStack, { type: 'add', figures: newFigures }]);
+        setRedoStackFigures([]);
+        
+        setToastInfo({
+          id: Date.now(),
+          type: 'success',
+          text: `Generated ${newFigures.length} figures`
+        });
+      } else {
+         setToastInfo({
+          id: Date.now(),
+          type: 'error',
+          text: 'AI could not generate drawing'
+        });
+      }
+    } catch (error) {
+      if (error.message.includes('NO_API_KEY')) {
+        setToastInfo({
+          id: Date.now(),
+          type: 'error',
+          text: 'Gemini API Key is missing. Please set it in Settings.',
+          button_label: 'Open Settings',
+          button_action: 'open_settings',
+          button_data: null
+        });
+        throw error; // Re-throw to let AIDialog know it failed
+      }
       
       setToastInfo({
         id: Date.now(),
-        type: 'success',
-        text: `Generated ${newFigures.length} figures`
-      });
-    } else {
-       setToastInfo({
-        id: Date.now(),
         type: 'error',
-        text: 'AI could not generate drawing'
+        text: 'AI Generation Failed: ' + error.message
       });
+      throw error;
     }
   };
 

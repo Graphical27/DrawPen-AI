@@ -13,9 +13,7 @@ if (electronSquirrelStartup) {
   app.quit();
 }
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
+// GoogleGenAI is now initialized on demand in 'generate_ai_drawing' handler
 
 
 const isDevelopment = process.env.NODE_ENV === 'development'
@@ -139,6 +137,10 @@ const schema = {
       label: null,
     }
   },
+  gemini_api_key: {
+    type: 'string',
+    default: ''
+  }
 };
 
 const store = new Store({
@@ -614,6 +616,11 @@ ipcMain.handle('open_notification', (_event, info) => {
 
     return null
   }
+
+  if (info.action === 'open_settings') {
+    showSettingsWindow();
+    return null;
+  }
 });
 
 ipcMain.handle('reset_to_originals', () => {
@@ -652,6 +659,8 @@ ipcMain.handle('get_configuration', () => {
 
     key_binding_clear_desk:                   normalizeAcceleratorForUI(store.get('key_binding_clear_desk')),
     key_binding_clear_desk_default:           normalizeAcceleratorForUI(schema.key_binding_clear_desk.default),
+    
+    gemini_api_key:                           store.get('gemini_api_key'),
   };
 });
 
@@ -800,7 +809,15 @@ ipcMain.handle('set_app_icon_color', (_event, value) => {
 
   tray.setImage(getTrayIconPath())
   return null;
+  tray.setImage(getTrayIconPath())
+  return null;
 });
+
+ipcMain.handle('set_gemini_api_key', (_event, key) => {
+  rawLog('Setting Gemini API Key:', key ? '***' : '(empty)')
+  store.set('gemini_api_key', key)
+  return null
+})
 
 const aiCacheStore = new Store({
   name: 'ai-cache',
@@ -809,6 +826,16 @@ const aiCacheStore = new Store({
 
 ipcMain.handle('generate_ai_drawing', async (_event, prompt) => {
   try {
+    const apiKey = store.get('gemini_api_key') || process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      throw new Error('NO_API_KEY');
+    }
+
+    const aiInstance = new GoogleGenAI({
+      apiKey: apiKey
+    });
+
     rawLog('Generating drawing for prompt:', prompt);
 
     // 1. Check Cache
@@ -894,7 +921,7 @@ ipcMain.handle('generate_ai_drawing', async (_event, prompt) => {
     - KEEP COORDINATES VISIBLE: x between 0 and ${width}, y between 0 and ${height}.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await aiInstance.models.generateContent({
       model: modelId,
       config: {
         systemInstruction: systemInstruction,

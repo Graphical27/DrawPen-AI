@@ -60,6 +60,7 @@ const Settings = (config) => {
   const [laserTimeMs, setLaserTimeMs] = useState(config.laser_time);
   const [launchOnLogin, setLaunchOnLogin] = useState(config.launch_on_login);
   const [startsHidden, setStartsHidden] = useState(config.starts_hidden);
+  const [geminiApiKey, setGeminiApiKey] = useState(config.gemini_api_key || '');
 
   const [showHideApp, setShowHideApp]               = useState({ accelerator: config.key_binding_show_hide_app,        init: config.key_binding_show_hide_app_default });
   const [showHideToolbar, setShowHideToolbar]       = useState({ accelerator: config.key_binding_show_hide_toolbar,    init: config.key_binding_show_hide_toolbar_default });
@@ -235,6 +236,16 @@ const Settings = (config) => {
 
     setDrawingMonitor(newMonitor);
     window.electronAPI.setDrawingMonitor(newMonitor);
+    window.electronAPI.setDrawingMonitor(newMonitor);
+  }
+
+  const handleApiKeyChange = (event) => {
+    const key = event.target.value;
+    setGeminiApiKey(key);
+  }
+
+  const saveApiKey = () => {
+    window.electronAPI.setGeminiApiKey(geminiApiKey);
   }
 
   return (
@@ -545,6 +556,25 @@ const Settings = (config) => {
                       className={`toggle ${launchOnLogin ? 'active' : ''}`}
                       onClick={toggleLaunch}
                     ></div>
+                  </div>
+                </div>
+
+                <div className="settings-item">
+                  <div className="settings-item-info">
+                    <div className="settings-item-title">Gemini API Key</div>
+                    <div className="settings-item-description">Required for AI features</div>
+                  </div>
+
+                  <div className="settings-item-control">
+                    <input 
+                      type="password" 
+                      className="input-text" 
+                      value={geminiApiKey} 
+                      onChange={handleApiKeyChange}
+                      onBlur={saveApiKey}
+                      placeholder="Paste your API key here"
+                      style={{ width: '200px', padding: '5px' }}
+                    />
                   </div>
                 </div>
 
