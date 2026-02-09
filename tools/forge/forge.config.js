@@ -48,7 +48,18 @@ module.exports = {
     },
     {
       name: "@electron-forge/maker-deb",
-      config: {}
+      config: {
+        options: {
+          name: "drawpen",
+          productName: "DrawPen",
+          genericName: "Screen Annotation Tool",
+          description: packageJson.description,
+          icon: path.join(rootDir, 'assets/build/icon.png'), // Ensure this file exists or use a compatible format
+          categories: ["Graphics", "Utility"],
+          maintainer: "DmytroVasin <dmytro.vasin@gmail.com>",
+          homepage: packageJson.repository.url
+        }
+      }
     },
     {
       name: "@electron-forge/maker-rpm",
