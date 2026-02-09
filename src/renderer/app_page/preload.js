@@ -19,4 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onShowNotification: (callback) => ipcRenderer.on('show_notification', callback),
 
   invokeGenerateAIDrawing: (prompt) => ipcRenderer.invoke('generate_ai_drawing', prompt),
+  invokeGetAIHistory: () => ipcRenderer.invoke('get_ai_history'),
+  invokeTogglePinAIPrompt: (prompt) => ipcRenderer.invoke('toggle_pin_ai_prompt', prompt),
+  invokeGetPinnedAIPrompts: () => ipcRenderer.invoke('get_pinned_ai_prompts'),
 });

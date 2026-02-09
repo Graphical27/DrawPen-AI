@@ -152,6 +152,10 @@ const schema = {
     type: "string",
     default: "",
   },
+  pinned_ai_prompts: {
+    type: "array",
+    default: [],
+  },
 };
 
 const store = new Store({
@@ -1043,6 +1047,45 @@ ipcMain.handle("generate_ai_drawing", async (_event, prompt) => {
     return figuresWithIds;
   } catch (error) {
     console.error("Error generating AI drawing:", error);
+    return [];
+  }
+});
+
+ipcMain.handle("get_ai_history", async (_event) => {
+  try {
+    // Return all keys from the cache store
+    const history = Object.keys(aiCacheStore.store);
+    return history.reverse(); // Newest first
+  } catch (error) {
+    console.error("Error getting AI history:", error);
+    return [];
+  }
+});
+
+ipcMain.handle("toggle_pin_ai_prompt", async (_event, prompt) => {
+  try {
+    const pinned = store.get("pinned_ai_prompts") || [];
+    let newPinned = [...pinned];
+    
+    if (newPinned.includes(prompt)) {
+      newPinned = newPinned.filter(p => p !== prompt);
+    } else {
+      newPinned.unshift(prompt); // Add to top
+    }
+    
+    store.set("pinned_ai_prompts", newPinned);
+    return newPinned;
+  } catch (error) {
+    console.error("Error toggling pin:", error);
+    return [];
+  }
+});
+
+ipcMain.handle("get_pinned_ai_prompts", async (_event) => {
+  try {
+    return store.get("pinned_ai_prompts") || [];
+  } catch (error) {
+    console.error("Error getting pinned prompts:", error);
     return [];
   }
 });
