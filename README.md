@@ -6,6 +6,10 @@ With the new **AI Chatbox**, you can generate drawings and text directly on your
 **New Feature:**
 *   **AI Chatbox**: Press <kbd>CMD/CTRL + I</kbd> to open the AI dialog. Describe what you want to draw or write, and the AI will generate it for you.
 
+![Recording 2026-02-09 222129(1)](https://github.com/user-attachments/assets/2563d42d-b898-481d-872d-f862d932d232)
+
+
+
 <p align="center">
   <img src="https://github.com/DmytroVasin/DrawPen/blob/main/assets/static/icon.png?raw=true" height="200">
   <h3 align="center">Draw Pen</h3>
