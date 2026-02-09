@@ -496,6 +496,13 @@ app.whenReady().then(() => {
 
   updateApp()
   setApplicationName()
+
+  // First Run / Missing API Key Check
+  if (!store.get('gemini_api_key')) {
+    setTimeout(() => {
+      showSettingsWindow();
+    }, 1500); // 1.5s delay to let main window load and show
+  }
 })
 
 app.on('will-quit', () => {

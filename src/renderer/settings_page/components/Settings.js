@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './Settings.scss';
 import ShortcutRecorder from './ShortcutRecorder';
+import SetupGuide from './SetupGuide';
 import {
   colorList,
   timeStep,
@@ -61,6 +62,17 @@ const Settings = (config) => {
   const [launchOnLogin, setLaunchOnLogin] = useState(config.launch_on_login);
   const [startsHidden, setStartsHidden] = useState(config.starts_hidden);
   const [geminiApiKey, setGeminiApiKey] = useState(config.gemini_api_key || '');
+  const [showSetupGuide, setShowSetupGuide] = useState(!config.gemini_api_key);
+
+  const handleSaveSetupGuide = (key) => {
+    setGeminiApiKey(key);
+    window.electronAPI.setGeminiApiKey(key);
+    setShowSetupGuide(false);
+  };
+
+  const handleCloseSetupGuide = () => {
+    setShowSetupGuide(false);
+  };
 
   const [showHideApp, setShowHideApp]               = useState({ accelerator: config.key_binding_show_hide_app,        init: config.key_binding_show_hide_app_default });
   const [showHideToolbar, setShowHideToolbar]       = useState({ accelerator: config.key_binding_show_hide_toolbar,    init: config.key_binding_show_hide_toolbar_default });
@@ -250,6 +262,11 @@ const Settings = (config) => {
 
   return (
     <div className="settings-page">
+      <SetupGuide 
+        isOpen={showSetupGuide} 
+        onSave={handleSaveSetupGuide} 
+        onClose={handleCloseSetupGuide}
+      />
       <div className="settings-sidebar-wrapper">
         <div className="settings-sidebar">
           <div
@@ -598,3 +615,4 @@ const Settings = (config) => {
 };
 
 export default Settings;
+

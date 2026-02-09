@@ -153,6 +153,13 @@ const Application = (settings) => {
       return
     }
 
+    if (showAIDialog) {
+      if (eventKey === 'i' && ctrlOrMeta) {
+      } else {
+        return;
+      }
+    }
+
     if (eventKey === 'shift' && !eventRepeat) {
       setIsShiftPressed(true);
     }
@@ -441,7 +448,7 @@ const Application = (settings) => {
         break;
       }
     }
-  }, [allFigures, undoStackFigures, redoStackFigures, clipboardFigure, isDrawing, activeFigureInfo, activeTool, activeColorIndex, activeWidthIndex, toolbarLastActiveBrush, toolbarLastActiveFigure, textEditorContainer, mouseCoordinates, mainColorIndex, secondaryColorIndex]);
+  }, [allFigures, undoStackFigures, redoStackFigures, clipboardFigure, isDrawing, activeFigureInfo, activeTool, activeColorIndex, activeWidthIndex, toolbarLastActiveBrush, toolbarLastActiveFigure, textEditorContainer, mouseCoordinates, mainColorIndex, secondaryColorIndex, showAIDialog]);
 
   const handleKeyUp = useCallback((event) => {
     const eventKey = (event.key || '').toLowerCase();
